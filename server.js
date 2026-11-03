@@ -211,7 +211,7 @@ async function sendStatusMessage(chatId, text) {
 }
 
 // Start Server
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`MoMo server running successfully on port ${PORT}`);
     pollTelegramUpdates();
