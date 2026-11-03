@@ -147,16 +147,26 @@
             vertical-align: middle;
         }
 
-        /* Phone Input Box matching reference */
+        /* Input layout matching reference */
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position:relative;
+            width:100%; /* Ensure row stays inside container */
+        }
+
+        /* Phone Input Box wrapper */
         .phone-input-box-wrapper {
             flex: 1;
+            min-width: 0; /* prevents flex item from overflowing parent bounds */
             position: relative;
             border: 2px solid #002B49;
             border-radius: 16px;
             height: 65px;
             display: flex;
             align-items: center;
-            padding: 0 15px;
+            padding: 0 12px;
             background: #fff;
         }
 
@@ -181,6 +191,7 @@
         }
 
         .phone-number-input {
+            width: 100%; /* Constrains the input field */
             flex: 1;
             border: none;
             outline: none;
